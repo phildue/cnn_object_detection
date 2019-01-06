@@ -13,14 +13,15 @@ class Polygon:
         n_boxes = coord_t.shape[0]
         boxes = []
         for i in range(n_boxes):
-            x1 = coord_t[i, 0] - coord_t[i, 2] / 2
-            y1 = coord_t[i, 1] - coord_t[i, 3] / 2
-            x2 = coord_t[i, 0] + coord_t[i, 2] / 2
-            y2 = coord_t[i, 1] - coord_t[i, 3] / 2
-            x3 = coord_t[i, 0] + coord_t[i, 2] / 2
-            y3 = coord_t[i, 1] + coord_t[i, 3] / 2
-            x4 = coord_t[i, 0] - coord_t[i, 2] / 2
-            y4 = coord_t[i, 1] + coord_t[i, 3] / 2
+            cx, cy, w, h = coord_t[i]
+            x1 = cx - w / 2
+            y1 = cy - h / 2
+            x2 = cx + w / 2
+            y2 = cy - h / 2
+            x3 = cx + w / 2
+            y3 = cy + h / 2
+            x4 = cx - w / 2
+            y4 = cy + h / 2
             b = Polygon(np.array([[x1, y1],
                                   [x2, y2],
                                   [x3, y3],

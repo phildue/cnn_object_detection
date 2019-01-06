@@ -2,7 +2,6 @@ import random
 import xml.etree.ElementTree as ET
 
 import numpy as np
-
 from utils.fileaccess.DatasetGenerator import DatasetGenerator
 from utils.fileaccess.utils import load_file
 from utils.imageprocessing.Backend import imread
