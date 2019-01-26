@@ -130,7 +130,8 @@ class YoloV3Encoder:
             label_t = np.concatenate((class_ts[ig], coord_ts[ig], anchor_ts[ig]), -1)
             y.append(
                 np.reshape(label_t,
-                           (g[0] * g[1] * self.n_boxes[ig], self.n_polygon + self.n_classes + 1 + anchor_ts[ig].shape[-1])))
+                           (g[0] * g[1] * self.n_boxes[ig],
+                            self.n_polygon + self.n_classes + 1 + anchor_ts[ig].shape[-1])))
 
         y = np.vstack(y)
         y[np.isnan(y[:, 0]), 0] = 0.0
@@ -222,9 +223,9 @@ class YoloV3Encoder:
 
                 t_w = b.width / p_w
                 t_h = b.height / p_h
-                class_ts[ig][icy, icx, ia, 0] = objectness
+                class_ts[ig][icy, icx, ia, 0] = self.logit(objectness)
                 class_ts[ig][icy, icx, ia, 1:] = class_one_hot
-                coord_ts[ig][icy, icx, ia] = t_cx, t_cy, t_w, t_h
+                coord_ts[ig][icy, icx, ia] = self.logit(t_cx), self.logit(t_cy), self.ln(t_w), self.ln(t_h)
                 if self.verbose > 1:
                     print("Assigned Anchor: {}-{}-{}-{}: {}".format(ig, icx, icy, ia,
                                                                     coord_ts[ig][icy, icx, ia]))
@@ -247,8 +248,17 @@ class YoloV3Encoder:
         return np.expand_dims(image.array, axis=0)
 
     @staticmethod
-    def logit(c):
-        return np.log(c / (1 - c))
+    def logit(x):
+        if x == 1.0:
+            x = 0.999
+
+        y = np.log(x / (1.0 - x))
+
+        return y
+
+    @staticmethod
+    def ln(x):
+        return np.log(x)
 
     def encode_img_batch(self, images: [Image]) -> np.array:
         imgs_enc = []

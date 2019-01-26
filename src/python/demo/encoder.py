@@ -1,3 +1,4 @@
+from modelzoo.YoloV3Decoder import YoloV3Decoder
 from modelzoo.YoloV3Encoder import YoloV3Encoder
 from utils.fileaccess.CocoGenerator import CocoGenerator
 from utils.imageprocessing.Imageprocessing import show
@@ -27,14 +28,18 @@ grids = [
     [13, 13],
     [7, 7]
 ]
+n_classes = 85
 
-encoder = YoloV3Encoder(anchor_dims=anchors, img_size=img_size, grids=grids, n_classes=85,
+encoder = YoloV3Encoder(anchor_dims=anchors, img_size=img_size, grids=grids, n_classes=n_classes,
                         verbose=0)
+decoder = YoloV3Decoder(img_size=img_size, grids=grids, anchor_dims=anchors, n_classes=n_classes)
 
-for imgs, labels in generator.generate_valid(batch_size=10, n=20):
-    #img_t = encoder.encode_img_batch(imgs)
-    label_t = encoder.encode_label_batch(labels)
-    print("Assigned: {} Lost: {}. Ignored Anchors: {}".format(encoder.matched, encoder.unmatched, encoder.ignored))
+loader = iter(generator.generate_valid(batch_size=10, n=20))
+imgs, labels = next(loader)
 
+y = encoder.encode_label_batch(labels)
+labels_decoded = decoder.decode_netout_batch(y)
 
-    #print(label_t)
+for i, l in enumerate(labels_decoded):
+    l.objects = [o for o in l.objects if o.confidence > 0.0]
+    show(imgs[i], labels=l)
