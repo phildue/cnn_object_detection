@@ -19,8 +19,8 @@ dataDir = 'lib/cocoapi/'
 generator = CocoGenerator(dataDir)
 anchors = np.array([
     [[10, 13],
-    [16, 30],
-    [33, 23]],
+     [16, 30],
+     [33, 23]],
     #   [30, 61],
     #   [62, 45],
     #   [59, 119],
@@ -62,13 +62,13 @@ netout = ConcatMeta(meta_t)(out)
 network = Model(netin, netout)
 optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
 
-network.compile(optimizer=optimizer, loss=loss.compute)
+network.compile(optimizer=optimizer, loss=loss.total_loss)
 
 
 def preprocess(gen):
     for imgs, labels in gen:
         x = np.zeros((batch_size, img_size[0], img_size[1], 3))
-        y = np.zeros((batch_size, 13 * 13 * 3,n_classes + 4 + 1 + 6))
+        y = np.zeros((batch_size, 13 * 13 * 3, n_classes + 4 + 1 + 6))
         idx = 0
         for img, label in zip(imgs, labels):
             img_, label_ = resize(img, img_size, label=label)

@@ -1,9 +1,7 @@
 import keras.backend as K
 
-from modelzoo.metrics.Loss import Loss
 
-
-class YoloV3Loss(Loss):
+class YoloV3Loss:
     def __init__(self, n_classes, n_polygon=4, weight_loc=5.0, weight_noobj=0.5,
                  weight_obj=5.0, weight_prob=1.0):
         self.n_classes = n_classes
@@ -13,26 +11,20 @@ class YoloV3Loss(Loss):
         self.scale_coor = weight_loc
         self.n_polygon = n_polygon
 
-    def loss(self, y_true, y_pred):
-        y_true_k = K.constant(y_true, name="y_true")
-        y_pred_k = K.constant(y_pred, name="netout")
-
-        return K.get_session().run(self.compute(y_true=y_true_k, y_pred=y_pred_k))
-
-    def compute(self, y_true, y_pred):
+    def total_loss(self, y_true, y_pred):
         """
         Loss function for YoloV3.
         :param y_true: y as fed for learning
         :param y_pred: raw network output
         :return: loss
         """
-        # y_pred = K.print_tensor(y_pred, "Y_Pred")
-        # y_true = K.print_tensor(y_true, "Y_True")
         loc_loss = self.localization_loss(y_true, y_pred)
 
         conf_loss = self.confidence_loss(y_true, y_pred)
 
-        return loc_loss + conf_loss
+        class_loss = self.classification_loss(y_true, y_pred)
+
+        return loc_loss + conf_loss + class_loss
 
     def localization_loss(self, y_true, y_pred):
         positives = K.cast(K.equal(y_true[:, :, 0], 1), K.dtype(y_true))
@@ -48,12 +40,9 @@ class YoloV3Loss(Loss):
 
         xy_loss = K.square(xy_true - xy_pred)
 
-        # xy_loss = K.binary_crossentropy(target=xy_true, output=xy_pred, from_logits=True)
-
         xy_loss_sum = K.sum(xy_loss, -1) * self.scale_coor * positives
 
         wh_true = coord_true[:, :, 2:]
-        # wh_true = K.switch(K.less_equal(wh_true, K.epsilon()), wh_true + K.epsilon(), wh_true)
         wh_true = K.log(wh_true)
         wh_pred = coord_pred[:, :, 2:]
         wh_loss = K.square(wh_true - wh_pred)
@@ -61,9 +50,6 @@ class YoloV3Loss(Loss):
         loc_loss = xy_loss_sum + wh_loss_sum
         total_loc_loss = K.sum(loc_loss) / K.cast(K.shape(y_true)[0], K.dtype(loc_loss))
 
-        # loc_loss_sum = K.print_tensor(loc_loss_sum,'Loc Loss=')
-        # total_loc_loss = K.tf.Print(total_loc_loss, [K.sum(wh_loss_sum, -1), K.sum(xy_loss_sum
-        #                                                                            , -1)], 'Localization Loss=')
         return total_loc_loss
 
     def confidence_loss(self, y_true, y_pred):
@@ -79,13 +65,10 @@ class YoloV3Loss(Loss):
                                           from_logits=False) * K.expand_dims(weight, -1)
         total_conf_loss = K.sum(conf_loss) / K.cast(K.shape(y_true)[0], K.dtype(conf_loss))
 
-        # conf_loss_total = K.print_tensor(conf_loss_total,'Conf Loss=')
-
         return total_conf_loss
 
     def classification_loss(self, y_true, y_pred):
         positives = K.cast(K.equal(y_true[:, :, 0], 1), K.dtype(y_true))
-        # ignore = K.cast(K.equal(y_true[:, :, 0], -1), K.dtype(y_true))
         negatives = K.cast(K.equal(y_true[:, :, 0], 0), K.dtype(y_true))
 
         weight = self.scale_noob * negatives + self.scale_obj * positives
@@ -97,7 +80,5 @@ class YoloV3Loss(Loss):
         class_loss = K.categorical_crossentropy(target=class_true, output=class_pred,
                                                 from_logits=True) * K.expand_dims(weight, -1)
         total_class_loss = K.sum(class_loss) / K.cast(K.shape(y_true)[0], K.dtype(class_loss))
-
-        # conf_loss_total = K.print_tensor(conf_loss_total,'Conf Loss=')
 
         return total_class_loss
