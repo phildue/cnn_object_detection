@@ -3,7 +3,7 @@ import keras.backend as K
 from modelzoo.metrics.Loss import Loss
 
 
-class GateDetectionLoss(Loss):
+class YoloV3Loss(Loss):
     def __init__(self, n_polygon=4, weight_loc=5.0, weight_noobj=0.5,
                  weight_obj=5.0, weight_prob=1.0):
         self.scale_prob = weight_prob

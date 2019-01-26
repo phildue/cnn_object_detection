@@ -1,7 +1,7 @@
 from pprint import pprint
 
 from modelzoo.Decoder import Decoder
-from modelzoo.Encoder import Encoder
+from modelzoo.Encoder import YoloV3Encoder
 from modelzoo.Postprocessor import Postprocessor
 from modelzoo.Preprocessor import Preprocessor
 from modelzoo.build_model import build_detector
@@ -70,8 +70,8 @@ model, output_grids = build_detector(img_shape=(img_res[0], img_res[1], 3),
                                      anchors=summary['anchors'],
                                      n_polygon=4)
 model.load_weights(src_dir + '/model.h5')
-encoder = Encoder(anchor_dims=summary['anchors'], img_norm=img_res, grids=output_grids, n_polygon=4,
-                  iou_min=0.4)
+encoder = YoloV3Encoder(anchor_dims=summary['anchors'], img_norm=img_res, grids=output_grids, n_polygon=4,
+                        iou_min=0.4)
 preprocessor = Preprocessor(preprocessing=None, encoder=encoder, n_classes=1, img_shape=img_res,
                             color_format='bgr')
 decoder = Decoder(anchor_dims=summary['anchors'], n_polygon=4, norm=img_res, grid=output_grids)

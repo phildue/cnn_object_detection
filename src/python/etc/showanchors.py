@@ -64,7 +64,7 @@ architecture = [
 predictor = GateNet.create_by_arch(architecture, norm=(416, 416), anchors=anchors, n_polygon=4)
 n_boxes = predictor.n_boxes
 
-anchors_t = Encoder.generate_encoding(predictor.norm, predictor.grid, predictor.anchors, 4)
+anchors_t = Encoder.generate_encoding_tensor(predictor.norm, predictor.grid, predictor.anchors, 4)
 anchors_boxes = Polygon.from_quad_t_centroid(anchors_t)
 black_image = Image(np.zeros(predictor.input_shape), 'bgr')
 k = 0

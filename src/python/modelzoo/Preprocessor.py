@@ -1,6 +1,6 @@
 import numpy as np
 
-from modelzoo.Encoder import Encoder
+from modelzoo.Encoder import YoloV3Encoder
 from utils.imageprocessing.Image import Image
 from utils.imageprocessing.Imageprocessing import show
 from utils.imageprocessing.transform.ImgTransform import ImgTransform
@@ -8,7 +8,7 @@ from utils.labels.ImgLabel import ImgLabel
 
 
 class Preprocessor:
-    def __init__(self, encoder: Encoder, n_classes, img_shape, color_format, augmentation: [ImgTransform]=None,
+    def __init__(self, encoder: YoloV3Encoder, n_classes, img_shape, color_format, augmentation: [ImgTransform]=None,
                  preprocessing: [ImgTransform] = None, show_t=-1):
         self.show_t = show_t
         self.preprocessing = preprocessing

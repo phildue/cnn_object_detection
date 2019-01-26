@@ -8,7 +8,7 @@ from sklearn.cluster import KMeans
 
 from modelzoo.Decoder import Decoder
 from modelzoo.Detector import Detector
-from modelzoo.Encoder import Encoder
+from modelzoo.Encoder import YoloV3Encoder
 from modelzoo.Postprocessor import Postprocessor
 from modelzoo.Preprocessor import Preprocessor
 from modelzoo.layers.ConcatMeta import ConcatMeta
@@ -27,7 +27,7 @@ def load_detector(directory, img_shape=None, preprocessing=None):
                                          anchors=anchors,
                                          n_polygon=4)
     model.load_weights(directory + '/model.h5')
-    encoder = Encoder(anchor_dims=anchors, img_norm=img_res, grids=output_grids, n_polygon=4, iou_min=0.4)
+    encoder = YoloV3Encoder(anchor_dims=anchors, img_norm=img_res, grids=output_grids, n_polygon=4, iou_min=0.4)
     preprocessor = Preprocessor(preprocessing=preprocessing, encoder=encoder, n_classes=1, img_shape=img_res,
                                 color_format=color_format)
     decoder = Decoder(anchor_dims=anchors, n_polygon=4, norm=img_res, grid=output_grids)
@@ -110,7 +110,7 @@ def build_detector(img_shape, architecture, anchors, n_polygon=4):
     else:
         predictions = predictions[0]
 
-    meta_t = K.constant(Encoder.generate_encoding((h, w), grids, anchors, n_polygon),
+    meta_t = K.constant(YoloV3Encoder.generate_encoding_tensor((h, w), grids, anchors, n_polygon),
                         K.tf.float32)
 
     netout = ConcatMeta(meta_t)(predictions)
