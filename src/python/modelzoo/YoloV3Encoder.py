@@ -107,6 +107,8 @@ class YoloV3Encoder:
             anchor_t = self.generate_encoding_tensor_layer(self.img_size, self.grids[ig], self.anchor_dims[ig],
                                                            self.n_polygon)
             box_t = np.zeros((g[0], g[1], self.n_boxes[ig], self.n_polygon))
+            box_t[:, :, :, :2] = 0.5
+            box_t[:, :, :, 2:] = 1.0
 
             class_ts.append(class_t)
             anchor_ts.append(anchor_t)
@@ -130,8 +132,7 @@ class YoloV3Encoder:
             label_t = np.concatenate((class_ts[ig], coord_ts[ig], anchor_ts[ig]), -1)
             y.append(
                 np.reshape(label_t,
-                           (g[0] * g[1] * self.n_boxes[ig],
-                            self.n_polygon + self.n_classes + 1 + anchor_ts[ig].shape[-1])))
+                           (g[0] * g[1] * self.n_boxes[ig], -1)))
 
         y = np.vstack(y)
         y[np.isnan(y[:, 0]), 0] = 0.0
@@ -218,14 +219,12 @@ class YoloV3Encoder:
                 t_cx = (b.cx - x_off) / cw
                 t_cy = (b.cy - y_off) / ch
 
-                if np.any(t_cx < 0) or np.any(t_cx > 1) or np.any(t_cy < 0) or np.any(t_cy > 1):
-                    raise ValueError('Invalid Assignment')
-
                 t_w = b.width / p_w
                 t_h = b.height / p_h
-                class_ts[ig][icy, icx, ia, 0] = self.logit(objectness)
+
+                class_ts[ig][icy, icx, ia, 0] = objectness
                 class_ts[ig][icy, icx, ia, 1:] = class_one_hot
-                coord_ts[ig][icy, icx, ia] = self.logit(t_cx), self.logit(t_cy), self.ln(t_w), self.ln(t_h)
+                coord_ts[ig][icy, icx, ia] = t_cx, t_cy, t_w, t_h
                 if self.verbose > 1:
                     print("Assigned Anchor: {}-{}-{}-{}: {}".format(ig, icx, icy, ia,
                                                                     coord_ts[ig][icy, icx, ia]))
@@ -239,6 +238,13 @@ class YoloV3Encoder:
         if np.any(np.isnan(y)) or np.any(np.isinf(y)):
             raise ValueError("Invalid Ground Truth")
 
+        if np.any(y[:, self.n_classes + 1:self.n_classes + 1 + 2] < 0) or np.any(
+                y[:, self.n_classes + 1:self.n_classes + 1 + 2] > 1):
+            raise ValueError('Invalid Ground Truth Center')
+
+        if np.any(y[:, self.n_classes + 1 + 2:self.n_classes + 1 + 4] <= 0):
+            raise ValueError('Invalid Width/Height')
+
         if self.verbose > 0:
             print("Assigned: {} Lost: {}. Ignored Anchors: {}".format(matched, len(label.objects) - matched, ignored))
 
@@ -249,8 +255,11 @@ class YoloV3Encoder:
 
     @staticmethod
     def logit(x):
+        return x
         if x == 1.0:
             x = 0.999
+        if x == 0.0:
+            x = 0.001
 
         y = np.log(x / (1.0 - x))
 
@@ -258,6 +267,7 @@ class YoloV3Encoder:
 
     @staticmethod
     def ln(x):
+        return x
         return np.log(x)
 
     def encode_img_batch(self, images: [Image]) -> np.array:

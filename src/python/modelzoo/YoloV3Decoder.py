@@ -26,6 +26,12 @@ class YoloV3Decoder:
     def exp(x):
         return np.exp(x)
 
+    @staticmethod
+    def softmax(x):
+        """Compute softmax values for each sets of scores in x."""
+        e_x = np.exp(x - np.max(x))
+        return e_x / e_x.sum(axis=0)
+
     def decode_netout(self, y):
         """
         Convert label tensor to objects of type Box.
@@ -35,7 +41,7 @@ class YoloV3Decoder:
         :return: boxes
         """
         conf_t = self.sigmoid(y[:, 0])
-        class_t = y[:, 1:self.n_classes]
+        class_t = self.softmax(y[:, 1:self.n_classes+1])
         coord_t = y[:, self.n_classes + 1:self.n_classes + 1 + self.n_polygon]
         enc_t = y[:, self.n_classes + 1 + self.n_polygon:]
 
