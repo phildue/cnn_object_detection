@@ -1,4 +1,5 @@
 import numpy as np
+from modelzoo.YoloV3Encoder import YoloV3Encoder
 
 from utils.labels.ImgLabel import ImgLabel
 from utils.labels.ObjectLabel import ObjectLabel
@@ -12,6 +13,7 @@ class YoloV3Decoder:
                  anchor_dims,
                  n_classes,
                  n_polygon=4):
+        self.anchor_dims = anchor_dims
         self.n_classes = n_classes
         self.n_polygon = n_polygon
         self.grids = grids
@@ -35,19 +37,22 @@ class YoloV3Decoder:
     def decode_netout(self, netout):
         """
         Convert label tensor to objects of type Box.
-        :param netout: (#total boxes,[objectness,class probabilities one hot encoded, box cx, box cy, box width, box height,
-                                anchor with, anchor height, grid cx, grid cy, cell width, cell height])
+        :param netout: (#total boxes,[objectness,class probabilities one hot encoded, box cx, box cy, box width, box height])
                                 label tensor as predicted by network
         :return: boxes
         """
         labels = []
         for idx_out in range(len(netout)):
-            n_boxes = netout[idx_out].shape[0] * netout[idx_out].shape[1] * netout[idx_out].shape[2]
-            y = np.reshape(netout[idx_out], (n_boxes, -1))
+            grid_y, grid_x, n_anchors,_ = netout[idx_out].shape
+            total_boxes = grid_x * grid_y * n_anchors
+            y = np.reshape(netout[idx_out], (total_boxes, -1))
             conf_t = self.sigmoid(y[:, 0])
             class_t = self.softmax(y[:, 1:self.n_classes + 1])
             coord_t = y[:, self.n_classes + 1:self.n_classes + 1 + self.n_polygon]
-            enc_t = y[:, self.n_classes + 1 + self.n_polygon:]
+
+            enc_t = YoloV3Encoder.generate_encoding_tensor_layer(self.img_size, (grid_y, grid_x),
+                                                                 self.anchor_dims[idx_out], self.n_polygon)
+            enc_t = np.reshape(enc_t, (total_boxes, -1))
 
             coord_t_dec = self.decode_coord(coord_t, enc_t)
 

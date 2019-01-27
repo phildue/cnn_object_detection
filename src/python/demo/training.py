@@ -3,6 +3,7 @@ from keras.layers import Conv2D, LeakyReLU, Reshape
 from keras.optimizers import Adam
 from modelzoo.YoloV3Decoder import YoloV3Decoder
 from modelzoo.YoloV3Encoder import YoloV3Encoder
+from modelzoo.architectures import build_yolov3_tiny
 from modelzoo.layers.ConcatMeta import ConcatMeta
 from modelzoo.metrics.YoloV3Loss import YoloV3Loss
 from utils.fileaccess.CocoGenerator import CocoGenerator
@@ -24,40 +25,43 @@ anchors = np.array([
     [[30, 61],
      [62, 45],
      [59, 119]],
-    #   [116, 90],
-    #   [156, 198],
-    #   [373, 326]
+    [116, 90],
+    [156, 198],
+    [373, 326]
 ])
 
 n_samples = 100
 
-img_size = (52, 52)
+img_size = (416, 416)
 
 grids = [
-    #   [26, 26],
+    [26, 26],
     [13, 13],
     [7, 7]
 ]
 n_classes = 92
-batch_size = 1
-n_boxes = [3,3]
+batch_size = 10
+n_boxes = [3, 3, 3]
 encoder = YoloV3Encoder(anchor_dims=anchors, img_size=img_size, grids=grids, n_classes=n_classes,
                         verbose=0)
 decoder = YoloV3Decoder(img_size=img_size, grids=grids, anchor_dims=anchors, n_classes=n_classes)
 
 loss = YoloV3Loss(n_classes)
+#
+# netin = Input(shape=(img_size[0], img_size[1], 3))
+# conv1 = Conv2D(filters=4, kernel_size=(3, 3), strides=(2, 2), padding='same')(netin)  # 26
+# act1 = LeakyReLU(0.4)(conv1)
+# conv2 = Conv2D(filters=4, kernel_size=(3, 3), strides=(2, 2), padding='same')(conv1)  # 13
+# act2 = LeakyReLU(0.4)(conv2)
+# out1 = Conv2D(n_boxes[0] * (n_classes + + 1 + 4), kernel_size=(1, 1))(act2)
+# conv3 = Conv2D(filters=4, kernel_size=(3, 3), strides=(2, 2), padding='same')(conv2)  # 13
+# act3 = LeakyReLU(0.4)(conv3)
+# out2 = Conv2D(n_boxes[1] * (n_classes + + 1 + 4), kernel_size=(1, 1))(act3)
+#
+# network = Model(netin, [out1, out2])
 
-netin = Input(shape=(img_size[0], img_size[1], 3))
-conv1 = Conv2D(filters=4, kernel_size=(3, 3), strides=(2, 2), padding='same')(netin)  # 26
-act1 = LeakyReLU(0.4)(conv1)
-conv2 = Conv2D(filters=4, kernel_size=(3, 3), strides=(2, 2), padding='same')(conv1)  # 13
-act2 = LeakyReLU(0.4)(conv2)
-out1 = Conv2D(n_boxes[0] * (n_classes + + 1 + 4), kernel_size=(1, 1))(act2)
-conv3 = Conv2D(filters=4, kernel_size=(3, 3), strides=(2, 2), padding='same')(conv2)  # 13
-act3 = LeakyReLU(0.4)(conv3)
-out2 = Conv2D(n_boxes[1] * (n_classes + + 1 + 4), kernel_size=(1, 1))(act3)
+network, grids, anchors, img_size = build_yolov3_tiny(n_classes)
 
-network = Model(netin, [out1, out2])
 optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
 
 network.compile(optimizer=optimizer, loss=loss.total_loss)

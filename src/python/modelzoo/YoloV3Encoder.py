@@ -116,20 +116,18 @@ class YoloV3Encoder:
 
         return class_ts, coord_ts, anchor_ts
 
-    def _concatenate(self, class_ts, coord_ts, anchor_ts):
+    def _concatenate(self, class_ts, coord_ts):
         """
         Concatenate three parts to single tensor
         :param class_ts: (#output layers,#grid vertical,#grid horizontal,#n classes +1) class probabilites
         :param coord_ts: (#output layers,#grid vertical,#grid horizontal,#polygon) box dimensions
-        :param anchor_ts: (#output layers,#grid vertical,#grid horizontal,6) anchor encoding
-        :return: (#total boxes,[objectness,class probabilities one hot encoded, box cx, box cy, box width, box height,
-                                anchor with, anchor height, grid cx, grid cy, cell width, cell height])
+        :return: (#total boxes,[objectness,class probabilities one hot encoded, box cx, box cy, box width, box height])
                  Last elements contain decoding information such that a prediction can be transformed to a label in image size
                  without needing to know the configuration at training time.
         """
         y = []
         for ig, g in enumerate(self.grids):
-            label_t = np.concatenate((class_ts[ig], coord_ts[ig], anchor_ts[ig]), -1)
+            label_t = np.concatenate((class_ts[ig], coord_ts[ig]), -1)
             label_t[np.isnan(label_t[:, :, :, 0]), 0] = 0.0
             y.append(label_t)
 
@@ -225,7 +223,7 @@ class YoloV3Encoder:
                 if self.verbose > 1:
                     print("Assigned Anchor: {}-{}-{}-{}: {}".format(ig, icx, icy, ia,
                                                                     coord_ts[ig][icy, icx, ia]))
-        out = self._concatenate(class_ts, coord_ts, anchor_ts)
+        out = self._concatenate(class_ts, coord_ts)
         matched = np.sum([len(y[y[:, :, :, 0] > 0]) for y in out])
         ignored = np.sum([len(y[y[:, :, :, 0] < 0]) for y in out])
         self.unmatched += len(label.objects) - matched
