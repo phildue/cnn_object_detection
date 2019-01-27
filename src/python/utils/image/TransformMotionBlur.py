@@ -2,8 +2,8 @@
 import cv2
 import numpy as np
 
-from utils.imageprocessing.Image import Image
-from utils.imageprocessing.transform.ImgTransform import ImgTransform
+from utils.image.Image import Image
+from utils.image.transform.ImgTransform import ImgTransform
 from utils.labels.ImgLabel import ImgLabel
 
 

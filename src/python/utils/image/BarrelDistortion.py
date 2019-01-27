@@ -3,8 +3,8 @@ import numpy as np
 from cv2.cv2 import remap
 
 from utils.fileaccess.utils import load_file, save_file
-from utils.imageprocessing.DistortionModel import DistortionModel
-from utils.imageprocessing.Image import Image
+from utils.image.DistortionModel import DistortionModel
+from utils.image.Image import Image
 from utils.labels.ImgLabel import ImgLabel
 from utils.timing import tic
 

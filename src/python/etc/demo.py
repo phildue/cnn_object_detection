@@ -7,7 +7,7 @@ from modelzoo.Preprocessor import Preprocessor
 from modelzoo.build_model import build_detector
 from utils.fileaccess.GateGenerator import GateGenerator
 from utils.fileaccess.utils import load_file, create_dirs
-from utils.imageprocessing.Imageprocessing import show, save_labeled, LEGEND_BOX
+from utils.image.Imageprocessing import show, save_labeled, LEGEND_BOX
 from utils.labels.ImgLabel import ImgLabel
 from utils.workdir import cd_work
 

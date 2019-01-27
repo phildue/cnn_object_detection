@@ -1,13 +1,18 @@
 import glob
 import pickle
 
-from utils.fileaccess.labelparser.AbstractDatasetParser import AbstractDatasetParser
-from utils.imageprocessing import Image
-from utils.imageprocessing.Backend import imwrite, imread
+from utils.image import Image
+from utils.image.Backend import imread
 from utils.labels.ImgLabel import ImgLabel
 
 
-class PklParser(AbstractDatasetParser):
+class PklParser:
+
+    def __init__(self, directory: str, color_format, start_idx=0, image_format='jpg'):
+        self.color_format = color_format
+        self.image_format = image_format
+        self.directory = directory
+        self.idx = start_idx
 
     def write_label(self, label: [ImgLabel], path: str):
         with open(path + '.pkl', 'wb') as f:

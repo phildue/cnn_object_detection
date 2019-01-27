@@ -1,6 +1,6 @@
 import cv2
 
-from utils.imageprocessing.Backend import imread
+from utils.image.Backend import imread
 from utils.workdir import cd_work
 
 cd_work()

@@ -1,7 +1,7 @@
 from utils.fileaccess.GateGenerator import GateGenerator
 from utils.fileaccess.VocGenerator import VocGenerator
-from utils.imageprocessing.Backend import resize
-from utils.imageprocessing.Imageprocessing import show, LEGEND_POSITION
+from utils.image.Backend import resize
+from utils.image.Imageprocessing import show, LEGEND_POSITION
 from utils.labels.ImgLabel import ImgLabel
 from utils.workdir import cd_work
 

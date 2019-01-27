@@ -89,7 +89,7 @@ class YoloV3Loss:
         class_true = y_true[:, :, 1:self.n_classes]
 
         class_loss = K.categorical_crossentropy(target=class_true, output=class_pred,
-                                                from_logits=True) * K.expand_dims(weight, -1)
+                                                from_logits=True) * weight
         total_class_loss = K.sum(class_loss) / K.cast(K.shape(y_true)[0], K.dtype(class_loss))
 
         return total_class_loss

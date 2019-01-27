@@ -1,7 +1,7 @@
 from modelzoo.YoloV3Decoder import YoloV3Decoder
 from modelzoo.YoloV3Encoder import YoloV3Encoder
 from utils.fileaccess.CocoGenerator import CocoGenerator
-from utils.imageprocessing.Imageprocessing import show
+from utils.image.Imageprocessing import show
 from utils.workdir import cd_work
 import numpy as np
 

@@ -2,17 +2,31 @@ import glob
 import xml.etree.ElementTree as ET
 
 import numpy as np
-
-from utils.fileaccess.labelparser.AbstractDatasetParser import AbstractDatasetParser
-from utils.imageprocessing import Image
-from utils.imageprocessing.Backend import imread
+from utils.image import Image
+from utils.image.imageprocessing import imwrite, imread
 from utils.labels.ImgLabel import ImgLabel
 from utils.labels.ObjectLabel import ObjectLabel
 from utils.labels.Polygon import Polygon
 from utils.labels.Pose import Pose
 
 
-class XmlParser(AbstractDatasetParser):
+class XmlParser:
+
+    def __init__(self, directory: str, color_format, start_idx=0, image_format='jpg'):
+        self.color_format = color_format
+        self.image_format = image_format
+        self.directory = directory
+        self.idx = start_idx
+
+    def write(self, images: [Image], labels: [ImgLabel]):
+        for i, l in enumerate(labels):
+            filename = '{}/{:05d}'.format(self.directory, self.idx)
+            self.write_img(images[i], filename + '.' + self.image_format)
+            self.write_label(l, filename)
+            self.idx += 1
+
+    def write_img(self, image: Image, path: str):
+        imwrite(image, path)
 
     def write_label(self, label: ImgLabel, path: str):
         root = ET.Element('annotation')

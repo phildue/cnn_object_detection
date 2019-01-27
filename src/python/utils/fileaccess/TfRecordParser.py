@@ -1,20 +1,20 @@
 import os
-import tensorflow as tf
-from object_detection.utils import dataset_util
 
-from utils.fileaccess.labelparser.AbstractDatasetParser import AbstractDatasetParser
-from utils.imageprocessing.Backend import convert_color, COLOR_BGR2RGB
-from utils.imageprocessing.Image import Image
-from utils.labels.ImgLabel import ImgLabel
-from utils.labels.ObjectLabel import ObjectLabel
 import numpy as np
+import tensorflow as tf
+from utils.image.Image import Image
+from utils.image.imageprocessing import convert_color, COLOR_BGR2RGB
+from utils.labels.ImgLabel import ImgLabel
 
 
-class TfRecordParser(AbstractDatasetParser):
+class TfRecordParser:
 
     def __init__(self, directory: str, color_format, start_idx=0, image_format='jpg'):
 
-        super().__init__(directory, color_format, start_idx, image_format)
+        self.color_format = color_format
+        self.image_format = image_format
+        self.directory = directory
+        self.idx = start_idx
         flags = tf.app.flags
         flags.DEFINE_string('output_path', self.directory, 'Path to output TFRecord')
         self.FLAGS = flags.FLAGS

@@ -2,15 +2,14 @@ import random
 import xml.etree.ElementTree as ET
 
 import numpy as np
-from utils.fileaccess.DatasetGenerator import DatasetGenerator
 from utils.fileaccess.utils import load_file
-from utils.imageprocessing.Backend import imread
-from utils.imageprocessing.Image import Image
+from utils.image.Image import Image
+from utils.image.imageprocessing import imread
 from utils.labels.ImgLabel import ImgLabel
 from utils.labels.ObjectLabel import ObjectLabel
 
 
-class VocGenerator(DatasetGenerator):
+class VocGenerator:
     @property
     def color_format(self):
         return self._color_format

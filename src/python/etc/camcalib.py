@@ -1,8 +1,8 @@
 import glob
 from pprint import pprint
 
-from utils.imageprocessing.Backend import imread, resize
-from utils.imageprocessing.CamCalibration import CamCalibration
+from utils.image.Backend import imread, resize
+from utils.image.CamCalibration import CamCalibration
 from utils.workdir import cd_work
 
 cd_work()

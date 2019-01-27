@@ -1,5 +1,5 @@
 from utils.fileaccess.utils import load_file
-from utils.imageprocessing.BarrelDistortion import BarrelDistortion
+from utils.image.BarrelDistortion import BarrelDistortion
 from utils.workdir import cd_work
 
 cd_work()

@@ -43,7 +43,7 @@ class YoloV3Decoder:
         """
         labels = []
         for idx_out in range(len(netout)):
-            grid_y, grid_x, n_anchors,_ = netout[idx_out].shape
+            grid_y, grid_x, n_anchors, _ = netout[idx_out].shape
             total_boxes = grid_x * grid_y * n_anchors
             y = np.reshape(netout[idx_out], (total_boxes, -1))
             conf_t = self.sigmoid(y[:, 0])

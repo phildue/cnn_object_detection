@@ -1,7 +1,5 @@
 import numpy as np
 
-from utils.imageprocessing.Backend import normalize
-from utils.imageprocessing.Image import Image
 from utils.labels.ImgLabel import ImgLabel
 from utils.labels.Polygon import Polygon
 
@@ -244,17 +242,6 @@ class YoloV3Encoder:
             print("Assigned: {} Lost: {}. Ignored Anchors: {}".format(matched, len(label.objects) - matched, ignored))
 
         return out
-
-    def encode_img(self, image: Image):
-        return np.expand_dims(image.array, axis=0)
-
-    def encode_img_batch(self, images: [Image]) -> np.array:
-        imgs_enc = []
-        for img in images:
-            img_t = self.encode_img(img)
-            imgs_enc.append(img_t)
-        img_t = np.concatenate(imgs_enc, 0)
-        return img_t
 
     def encode_label_batch(self, labels: [ImgLabel]) -> np.array:
         ys = []*len(self.grids)

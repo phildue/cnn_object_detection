@@ -1,7 +1,7 @@
 import numpy as np
 
-from utils.imageprocessing.Image import Image
-from utils.imageprocessing.Imageprocessing import show
+from utils.image.Image import Image
+from utils.image.Imageprocessing import show
 from utils.labels.ImgLabel import ImgLabel
 from utils.labels.ObjectLabel import ObjectLabel
 from utils.labels.Polygon import Polygon

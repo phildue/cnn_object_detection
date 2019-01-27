@@ -1,7 +1,7 @@
 import random
 
 from pycocotools.coco import COCO
-from utils.imageprocessing.Backend import imread
+from utils.image.imageprocessing import imread
 from utils.labels.ImgLabel import ImgLabel
 from utils.labels.ObjectLabel import ObjectLabel
 from utils.labels.Polygon import Polygon

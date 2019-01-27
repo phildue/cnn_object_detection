@@ -2,8 +2,8 @@ import numpy as np
 from modelzoo.GateNetEncoder import Encoder
 from modelzoo.models.gatenet.GateNet import GateNet
 
-from utils.imageprocessing.Image import Image
-from utils.imageprocessing.Imageprocessing import show, LEGEND_BOX
+from utils.image.Image import Image
+from utils.image.Imageprocessing import show, LEGEND_BOX
 from utils.labels.ImgLabel import ImgLabel
 from utils.labels.ObjectLabel import ObjectLabel
 from utils.labels.Polygon import Polygon

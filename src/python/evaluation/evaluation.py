@@ -7,9 +7,9 @@ from utils.ModelSummary import ModelSummary
 from utils.SetAnalysis import SetAnalysis
 from utils.fileaccess.GateGenerator import GateGenerator
 from utils.fileaccess.utils import save_file, create_dirs, load_file
-from utils.imageprocessing.Backend import imread
-from utils.imageprocessing.Imageprocessing import show
-from utils.imageprocessing.transform.ImgTransform import ImgTransform
+from utils.image.Backend import imread
+from utils.image.Imageprocessing import show
+from utils.image.transform.ImgTransform import ImgTransform
 from utils.labels.ImgLabel import ImgLabel
 from utils.timing import tic, toc
 

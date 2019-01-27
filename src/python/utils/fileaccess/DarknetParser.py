@@ -1,18 +1,20 @@
 import glob
 
-from utils.fileaccess.labelparser.AbstractDatasetParser import AbstractDatasetParser
-from utils.imageprocessing import Image
-from utils.imageprocessing.Backend import resize, imread
-from utils.labels.ImgLabel import ImgLabel
 import numpy as np
+from utils.image import Image
+from utils.image.imageprocessing import resize
+from utils.labels.ImgLabel import ImgLabel
 from utils.labels.ObjectLabel import ObjectLabel
 from utils.labels.Polygon import Polygon
 
 
-class YoloParser(AbstractDatasetParser):
+class DarknetParser:
 
     def __init__(self, directory: str, color_format, image_format='jpg', start_idx=0, img_norm=(416, 416)):
-        super().__init__(directory, color_format, start_idx, image_format)
+        self.color_format = color_format
+        self.image_format = image_format
+        self.directory = directory
+        self.idx = start_idx
         self.img_norm = img_norm
 
     def read(self, n=0) -> ([Image], [ImgLabel]):
@@ -27,7 +29,7 @@ class YoloParser(AbstractDatasetParser):
             if image is None:
                 continue
 
-            label = YoloParser.read_label(file.replace(self.image_format, 'txt'), self.img_norm)
+            label = DarknetParser.read_label(file.replace(self.image_format, 'txt'), self.img_norm)
             samples.append(image)
             labels.append(label)
         return samples, labels

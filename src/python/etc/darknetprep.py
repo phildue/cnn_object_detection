@@ -3,10 +3,10 @@ import random
 import numpy as np
 
 from utils.fileaccess.GateGenerator import GateGenerator
-from utils.fileaccess.labelparser.YoloParser import YoloParser
+from utils.fileaccess.labelparser.YoloParser import DarknetParser
 from utils.fileaccess.utils import create_dirs
-from utils.imageprocessing.Backend import crop, resize
-from utils.imageprocessing.Imageprocessing import show
+from utils.image.Backend import crop, resize
+from utils.image.Imageprocessing import show
 from utils.labels.ImgLabel import ImgLabel
 from utils.timing import tic, toc
 from utils.workdir import cd_work
@@ -70,7 +70,7 @@ generator = GateGenerator([src_dir + s for s in sets], batch_size,
 reader = generator.generate()
 n_images = generator.n_samples
 
-writer = YoloParser(out_dir + '/samples', color_format='bgr', image_format='jpg', img_norm=(416, 416))
+writer = DarknetParser(out_dir + '/samples', color_format='bgr', image_format='jpg', img_norm=(416, 416))
 n_images_filtered = 0
 
 for i in range(0, n_images, batch_size):

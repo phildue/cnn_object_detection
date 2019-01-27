@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from utils.imageprocessing.Image import Image
+from utils.image.Image import Image
 from utils.labels.ImgLabel import ImgLabel
 
 

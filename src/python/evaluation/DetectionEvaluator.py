@@ -1,6 +1,6 @@
 from evaluation.DetectionResult import DetectionResult
-from utils.imageprocessing.Image import Image
-from utils.imageprocessing.Imageprocessing import COLOR_GREEN, COLOR_RED, show, LEGEND_TEXT
+from utils.image.Image import Image
+from utils.image.Imageprocessing import COLOR_GREEN, COLOR_RED, show, LEGEND_TEXT
 from utils.labels.ImgLabel import ImgLabel
 
 
