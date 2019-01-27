@@ -213,7 +213,7 @@ def resize(img: Image, shape: tuple = None, scale_x=1.0, scale_y=1.0, label: Img
         return Image(img_resized, img.format)
 
 
-def pad_letterbox(img: Image, label: ImgLabel = None):
+def pad_equal_letterbox(img: Image, label: ImgLabel = None):
     """
     Pad image such that aspect ratio is equal
     :param img: image
@@ -225,13 +225,19 @@ def pad_letterbox(img: Image, label: ImgLabel = None):
     target_size = max(img.shape)
 
     diff = np.max(target_size - h, 0), np.max(target_size - w, 0)
+    return pad_letterbox(img, diff, label)
+
+
+def pad_letterbox(img: Image, diff: tuple, label: ImgLabel = None):
     diff_top = int(np.ceil(diff[0] / 2))
     diff_bottom = int(np.floor(diff[0] / 2))
     diff_right = int(np.ceil(diff[1] / 2))
     diff_left = int(np.floor(diff[1] / 2))
+
     mat_letterbox = cv2.copyMakeBorder(img.array, top=diff_top, bottom=diff_bottom,
                                        right=diff_right, left=diff_left,
                                        borderType=cv2.BORDER_CONSTANT, value=(128, 128, 128))
+
     img_letterbox = Image(mat_letterbox, img.format)
     if label:
         for obj in label.objects:

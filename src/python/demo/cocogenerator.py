@@ -1,5 +1,5 @@
 from utils.fileaccess.CocoGenerator import CocoGenerator
-from utils.image.Imageprocessing import show
+from utils.image.imageprocessing import show
 from utils.workdir import cd_work
 
 cd_work()

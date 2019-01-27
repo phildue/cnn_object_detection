@@ -125,7 +125,7 @@ class YoloV3Encoder:
         """
         y = []
         for ig, g in enumerate(self.grids):
-            label_t = np.concatenate((class_ts[ig], coord_ts[ig]), -1)
+            label_t = np.concatenate((coord_ts[ig], class_ts[ig]), -1)
             label_t[np.isnan(label_t[:, :, :, 0]), 0] = 0.0
             y.append(label_t)
 
@@ -222,8 +222,8 @@ class YoloV3Encoder:
                     print("Assigned Anchor: {}-{}-{}-{}: {}".format(ig, icx, icy, ia,
                                                                     coord_ts[ig][icy, icx, ia]))
         out = self._concatenate(class_ts, coord_ts)
-        matched = np.sum([len(y[y[:, :, :, 0] > 0]) for y in out])
-        ignored = np.sum([len(y[y[:, :, :, 0] < 0]) for y in out])
+        matched = np.sum([len(y[y[:, :, :, self.n_polygon] > 0]) for y in out])
+        ignored = np.sum([len(y[y[:, :, :, self.n_polygon] < 0]) for y in out])
         self.unmatched += len(label.objects) - matched
         self.matched += matched
         self.ignored += ignored
@@ -231,11 +231,11 @@ class YoloV3Encoder:
         if any(np.any(np.isnan(y)) for y in out) or any(np.any(np.isinf(y)) for y in out):
             raise ValueError("Invalid Ground Truth")
 
-        if any(np.any(y[:, :, :, self.n_classes + 1:self.n_classes + 1 + 2] < 0) for y in out) or \
-                any(np.any(y[:, :, :, self.n_classes + 1:self.n_classes + 1 + 2] > 1) for y in out):
+        if any(np.any(y[:, :, :, :2] < 0) for y in out) or \
+                any(np.any(y[:, :, :, :2] > 1) for y in out):
             raise ValueError('Invalid Ground Truth Center')
 
-        if any(np.any(y[:, :, :, self.n_classes + 1 + 2:self.n_classes + 1 + 4] <= 0) for y in out):
+        if any(np.any(y[:, :, :, 2:4] <= 0) for y in out):
             raise ValueError('Invalid Width/Height')
 
         if self.verbose > 0:
@@ -244,7 +244,7 @@ class YoloV3Encoder:
         return out
 
     def encode_label_batch(self, labels: [ImgLabel]) -> np.array:
-        ys = []*len(self.grids)
+        ys = [] * len(self.grids)
         for i in range(len(self.grids)):
             ys.append([])
         for label in labels:

@@ -1,5 +1,5 @@
 import numpy as np
-from modelzoo.YoloV3Encoder import YoloV3Encoder
+from modelzoo.yolo.YoloV3Encoder import YoloV3Encoder
 
 from utils.labels.ImgLabel import ImgLabel
 from utils.labels.ObjectLabel import ObjectLabel
@@ -30,7 +30,9 @@ class YoloV3Decoder:
 
     @staticmethod
     def softmax(x):
-        """Compute softmax values for each sets of scores in x."""
+        """
+        Compute softmax values for each sets of scores in x.
+        """
         e_x = np.exp(x - np.max(x))
         return e_x / e_x.sum(axis=0)
 
@@ -43,12 +45,16 @@ class YoloV3Decoder:
         """
         labels = []
         for idx_out in range(len(netout)):
-            grid_y, grid_x, n_anchors, _ = netout[idx_out].shape
-            total_boxes = grid_x * grid_y * n_anchors
+            _, grid_y, grid_x, _ = netout[idx_out].shape
+
+            total_boxes = grid_x * grid_y * self.n_boxes[idx_out]
             y = np.reshape(netout[idx_out], (total_boxes, -1))
-            conf_t = self.sigmoid(y[:, 0])
-            class_t = self.softmax(y[:, 1:self.n_classes + 1])
-            coord_t = y[:, self.n_classes + 1:self.n_classes + 1 + self.n_polygon]
+            conf_t = y[:, self.n_polygon]
+
+            conf_t = self.sigmoid(conf_t)
+            class_t = y[:, self.n_polygon + 1:]
+            class_t = self.softmax(class_t)
+            coord_t = y[:, :self.n_polygon]
 
             enc_t = YoloV3Encoder.generate_encoding_tensor_layer(self.img_size, (grid_y, grid_x),
                                                                  self.anchor_dims[idx_out], self.n_polygon)

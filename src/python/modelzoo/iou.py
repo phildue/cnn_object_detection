@@ -48,7 +48,7 @@ def iou_np(box_a, box_b):
 
 
 def non_max_suppression(boxes: [ObjectLabel], iou_thresh=0.4, n_max=50):
-    coord_t = np.concatenate([np.expand_dims(b.poly.to_quad_t_minmax,0) for b in boxes], 0)
+    coord_t = np.concatenate([np.expand_dims(b.poly.to_quad_t_minmax, 0) for b in boxes], 0)
     confs = [b.confidence for b in boxes]
     conf_t = np.array(confs).flatten()
 
@@ -58,4 +58,4 @@ def non_max_suppression(boxes: [ObjectLabel], iou_thresh=0.4, n_max=50):
 
 
 def non_max_suppression_tf(boxes_pred_t, class_conf_t, iou_thresh, n_max=50):
-    return K.tf.image.non_max_suppression(boxes_pred_t, class_conf_t, n_max, iou_thresh, 'NonMaxSuppression')
+    return K.tf.image.non_max_suppression(boxes_pred_t, class_conf_t, n_max, iou_thresh, name='NonMaxSuppression')

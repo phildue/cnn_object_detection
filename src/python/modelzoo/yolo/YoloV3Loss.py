@@ -36,10 +36,10 @@ class YoloV3Loss:
 
     def localization_loss(self, y_true, y_pred):
         y_true, y_pred = self._reshape(y_true, y_pred)
-        positives = K.cast(K.equal(y_true[:, :, 0], 1), K.dtype(y_true))
-        idx_coord = self.n_classes + 1
-        coord_true = y_true[:, :, idx_coord:idx_coord + self.n_polygon]
-        coord_pred = y_pred[:, :, idx_coord:idx_coord + self.n_polygon]
+        positives = K.cast(K.equal(y_true[:, :, self.n_polygon], 1), K.dtype(y_true))
+
+        coord_true = y_true[:, :, :self.n_polygon]
+        coord_pred = y_pred[:, :, :self.n_polygon]
 
         xy_true = coord_true[:, :, :2]
         xy_true = K.clip(xy_true, K.epsilon(), 1 - K.epsilon())
@@ -63,13 +63,13 @@ class YoloV3Loss:
 
     def confidence_loss(self, y_true, y_pred):
         y_true, y_pred = self._reshape(y_true, y_pred)
-        positives = K.cast(K.equal(y_true[:, :, 0], 1), K.dtype(y_true))
+        positives = K.cast(K.equal(y_true[:, :, self.n_polygon], 1), K.dtype(y_true))
         # ignore = K.cast(K.equal(y_true[:, :, 0], -1), K.dtype(y_true))
-        negatives = K.cast(K.equal(y_true[:, :, 0], 0), K.dtype(y_true))
+        negatives = K.cast(K.equal(y_true[:, :, self.n_polygon], 0), K.dtype(y_true))
 
         weight = self.scale_noob * negatives + self.scale_obj * positives
 
-        conf_pred = y_pred[:, :, 0:1]
+        conf_pred = y_pred[:, :, self.n_polygon:self.n_polygon+1]
 
         conf_loss = K.binary_crossentropy(target=K.expand_dims(positives, -1), output=conf_pred,
                                           from_logits=False) * K.expand_dims(weight, -1)
@@ -79,14 +79,14 @@ class YoloV3Loss:
 
     def classification_loss(self, y_true, y_pred):
         y_true, y_pred = self._reshape(y_true, y_pred)
-        positives = K.cast(K.equal(y_true[:, :, 0], 1), K.dtype(y_true))
-        negatives = K.cast(K.equal(y_true[:, :, 0], 0), K.dtype(y_true))
+        positives = K.cast(K.equal(y_true[:, :, self.n_polygon], 1), K.dtype(y_true))
+        negatives = K.cast(K.equal(y_true[:, :, self.n_polygon], 0), K.dtype(y_true))
 
         weight = self.scale_noob * negatives + self.scale_obj * positives
 
-        class_pred = y_pred[:, :, 1:self.n_classes]
+        class_pred = y_pred[:, :, self.n_polygon+1:]
 
-        class_true = y_true[:, :, 1:self.n_classes]
+        class_true = y_true[:, :, self.n_polygon+1:]
 
         class_loss = K.categorical_crossentropy(target=class_true, output=class_pred,
                                                 from_logits=True) * weight

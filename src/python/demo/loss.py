@@ -1,9 +1,8 @@
-from modelzoo.YoloV3Decoder import YoloV3Decoder
-from modelzoo.YoloV3Encoder import YoloV3Encoder
-from modelzoo.metrics.YoloV3Loss import YoloV3Loss
+from modelzoo.yolo.YoloV3Decoder import YoloV3Decoder
+from modelzoo.yolo.YoloV3Encoder import YoloV3Encoder
+from modelzoo.yolo.YoloV3Loss import YoloV3Loss
 from utils.fileaccess.CocoGenerator import CocoGenerator
-from utils.image.Backend import resize
-from utils.image.Imageprocessing import show
+from utils.image.imageprocessing import resize, show
 from utils.workdir import cd_work
 import numpy as np
 
@@ -34,7 +33,7 @@ grids = [
 n_classes = 92
 batch_size = 10
 encoder = YoloV3Encoder(anchor_dims=anchors, grids=grids, n_classes=n_classes,
-                        verbose=0,img_size=img_size)
+                        verbose=0, img_size=img_size)
 decoder = YoloV3Decoder(grids=grids, anchor_dims=anchors, n_classes=n_classes, img_size=img_size)
 
 loader = iter(generator.generate_valid(batch_size=batch_size, n=20))
@@ -65,6 +64,7 @@ def log(x):
     return y
 
 
+n_polygon = 4
 graph = tf.Graph()
 with graph.as_default():
     session = tf.Session()
@@ -81,14 +81,14 @@ with graph.as_default():
                 y_1 = y_batch[idx_out][i + 1:i + 2].copy()
                 y_1 = y_0.copy()
                 y_1[:, :, :, :, 0:1] = logit(y_1[:, :, :, :, 0:1])
-                y_1[:, :, :, :, 1:n_classes + 1] = np.clip(y_1[:, :, :, :, 1:n_classes + 1], K.epsilon(),
-                                                           1 - K.epsilon())
-                y_1[:, :, :, :, 1:n_classes + 1] = np.log(y_1[:, :, :, :, 1:n_classes + 1])
+                y_1[:, :, :, :, n_polygon + 1:] = np.clip(y_1[:, :, :, :, n_polygon + 1:], K.epsilon(),
+                                                         1 - K.epsilon())
+                y_1[:, :, :, :, n_polygon + 1:] = np.log(y_1[:, :, :, :, n_polygon + 1:])
 
-                y_1[:, :, :, :, n_classes + 1: n_classes + 1 + 2] = logit(
-                    y_1[:, :, :, :, n_classes + 1: n_classes + 1 + 2])
-                y_1[:, :, :, :, n_classes + 1 + 2: n_classes + 1 + 4] = log(
-                    y_1[:, :, :, :, n_classes + 1 + 2: n_classes + 1 + 4])
+                y_1[:, :, :, :, :2] = logit(
+                    y_1[:, :, :, :, :2])
+                y_1[:, :, :, :, 2:4] = log(
+                    y_1[:, :, :, :, 2:4])
                 y_enc.append(y_1)
                 y_0_t = K.constant(y_0, shape=y_0.shape)
                 y_1_t = K.constant(y_1, shape=y_1.shape)
