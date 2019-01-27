@@ -32,29 +32,32 @@ class YoloV3Decoder:
         e_x = np.exp(x - np.max(x))
         return e_x / e_x.sum(axis=0)
 
-    def decode_netout(self, y):
+    def decode_netout(self, netout):
         """
         Convert label tensor to objects of type Box.
-        :param y: (#total boxes,[objectness,class probabilities one hot encoded, box cx, box cy, box width, box height,
+        :param netout: (#total boxes,[objectness,class probabilities one hot encoded, box cx, box cy, box width, box height,
                                 anchor with, anchor height, grid cx, grid cy, cell width, cell height])
                                 label tensor as predicted by network
         :return: boxes
         """
-        conf_t = self.sigmoid(y[:, 0])
-        class_t = self.softmax(y[:, 1:self.n_classes+1])
-        coord_t = y[:, self.n_classes + 1:self.n_classes + 1 + self.n_polygon]
-        enc_t = y[:, self.n_classes + 1 + self.n_polygon:]
-
-        coord_t_dec = self.decode_coord(coord_t, enc_t)
-
-        boxes = Polygon.from_quad_t_centroid(coord_t_dec)
-
         labels = []
-        for i, b in enumerate(boxes):
-            conf = conf_t[i]*np.max(class_t[i])
-            class_id = np.argmax(class_t[i, :])
-            label = ObjectLabel(class_id, conf, b)
-            labels.append(label)
+        for idx_out in range(len(netout)):
+            n_boxes = netout[idx_out].shape[0] * netout[idx_out].shape[1] * netout[idx_out].shape[2]
+            y = np.reshape(netout[idx_out], (n_boxes, -1))
+            conf_t = self.sigmoid(y[:, 0])
+            class_t = self.softmax(y[:, 1:self.n_classes + 1])
+            coord_t = y[:, self.n_classes + 1:self.n_classes + 1 + self.n_polygon]
+            enc_t = y[:, self.n_classes + 1 + self.n_polygon:]
+
+            coord_t_dec = self.decode_coord(coord_t, enc_t)
+
+            boxes = Polygon.from_quad_t_centroid(coord_t_dec)
+
+            for i, b in enumerate(boxes):
+                conf = conf_t[i] * np.max(class_t[i])
+                class_id = np.argmax(class_t[i, :])
+                label = ObjectLabel(class_id, conf, b)
+                labels.append(label)
 
         return ImgLabel(labels)
 
@@ -88,9 +91,12 @@ class YoloV3Decoder:
         return np.column_stack([b_cx, b_cy, b_w, b_h])
 
     def decode_netout_batch(self, netout) -> [ImgLabel]:
+        n_outputs = len(netout)
+        batch_size = netout[0].shape[0]
         labels = []
-        for i in range(netout.shape[0]):
-            label = self.decode_netout(netout[i])
+        for i in range(batch_size):
+            output_of_sample_i = [netout[j][i] for j in range(n_outputs)]
+            label = self.decode_netout(output_of_sample_i)
             labels.append(label)
 
         return labels

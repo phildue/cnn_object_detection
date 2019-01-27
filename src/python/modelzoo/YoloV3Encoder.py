@@ -130,12 +130,9 @@ class YoloV3Encoder:
         y = []
         for ig, g in enumerate(self.grids):
             label_t = np.concatenate((class_ts[ig], coord_ts[ig], anchor_ts[ig]), -1)
-            y.append(
-                np.reshape(label_t,
-                           (g[0] * g[1] * self.n_boxes[ig], -1)))
+            label_t[np.isnan(label_t[:, :, :, 0]), 0] = 0.0
+            y.append(label_t)
 
-        y = np.vstack(y)
-        y[np.isnan(y[:, 0]), 0] = 0.0
         return y
 
     def _find_candidates(self, box_true):
@@ -228,47 +225,30 @@ class YoloV3Encoder:
                 if self.verbose > 1:
                     print("Assigned Anchor: {}-{}-{}-{}: {}".format(ig, icx, icy, ia,
                                                                     coord_ts[ig][icy, icx, ia]))
-        y = self._concatenate(class_ts, coord_ts, anchor_ts)
-        matched = len(y[y[:, 0] > 0])
-        ignored = len(y[y[:, 0] < 0])
+        out = self._concatenate(class_ts, coord_ts, anchor_ts)
+        matched = np.sum([len(y[y[:, :, :, 0] > 0]) for y in out])
+        ignored = np.sum([len(y[y[:, :, :, 0] < 0]) for y in out])
         self.unmatched += len(label.objects) - matched
         self.matched += matched
         self.ignored += ignored
 
-        if np.any(np.isnan(y)) or np.any(np.isinf(y)):
+        if any(np.any(np.isnan(y)) for y in out) or any(np.any(np.isinf(y)) for y in out):
             raise ValueError("Invalid Ground Truth")
 
-        if np.any(y[:, self.n_classes + 1:self.n_classes + 1 + 2] < 0) or np.any(
-                y[:, self.n_classes + 1:self.n_classes + 1 + 2] > 1):
+        if any(np.any(y[:, :, :, self.n_classes + 1:self.n_classes + 1 + 2] < 0) for y in out) or \
+                any(np.any(y[:, :, :, self.n_classes + 1:self.n_classes + 1 + 2] > 1) for y in out):
             raise ValueError('Invalid Ground Truth Center')
 
-        if np.any(y[:, self.n_classes + 1 + 2:self.n_classes + 1 + 4] <= 0):
+        if any(np.any(y[:, :, :, self.n_classes + 1 + 2:self.n_classes + 1 + 4] <= 0) for y in out):
             raise ValueError('Invalid Width/Height')
 
         if self.verbose > 0:
             print("Assigned: {} Lost: {}. Ignored Anchors: {}".format(matched, len(label.objects) - matched, ignored))
 
-        return y
+        return out
 
     def encode_img(self, image: Image):
         return np.expand_dims(image.array, axis=0)
-
-    @staticmethod
-    def logit(x):
-        return x
-        if x == 1.0:
-            x = 0.999
-        if x == 0.0:
-            x = 0.001
-
-        y = np.log(x / (1.0 - x))
-
-        return y
-
-    @staticmethod
-    def ln(x):
-        return x
-        return np.log(x)
 
     def encode_img_batch(self, images: [Image]) -> np.array:
         imgs_enc = []
@@ -279,10 +259,13 @@ class YoloV3Encoder:
         return img_t
 
     def encode_label_batch(self, labels: [ImgLabel]) -> np.array:
-        labels_enc = []
+        ys = []*len(self.grids)
+        for i in range(len(self.grids)):
+            ys.append([])
         for label in labels:
-            label_t = self.encode_label(label)
-            label_t = np.expand_dims(label_t, 0)
-            labels_enc.append(label_t)
-        label_t = np.concatenate(labels_enc, 0)
-        return label_t
+            y = self.encode_label(label)
+            for i in range(len(self.grids)):
+                ys[i].append(np.expand_dims(y[i], 0))
+        for i in range(len(self.grids)):
+            ys[i] = np.concatenate(ys[i], 0)
+        return ys

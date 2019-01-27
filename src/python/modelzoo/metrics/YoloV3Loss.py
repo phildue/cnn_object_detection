@@ -11,6 +11,14 @@ class YoloV3Loss:
         self.scale_coor = weight_loc
         self.n_polygon = n_polygon
 
+    @staticmethod
+    def _reshape(y_true, y_pred):
+        batch_size = K.shape(y_true)[0]
+        n_boxes = K.shape(y_true)[1] * K.shape(y_true)[2] * K.shape(y_true)[3]
+        y_true = K.reshape(y_true, (batch_size, n_boxes, -1))
+        y_pred = K.reshape(y_pred, (batch_size, n_boxes, -1))
+        return y_true, y_pred
+
     def total_loss(self, y_true, y_pred):
         """
         Loss function for YoloV3.
@@ -27,6 +35,7 @@ class YoloV3Loss:
         return loc_loss + conf_loss + class_loss
 
     def localization_loss(self, y_true, y_pred):
+        y_true, y_pred = self._reshape(y_true, y_pred)
         positives = K.cast(K.equal(y_true[:, :, 0], 1), K.dtype(y_true))
         idx_coord = self.n_classes + 1
         coord_true = y_true[:, :, idx_coord:idx_coord + self.n_polygon]
@@ -53,6 +62,7 @@ class YoloV3Loss:
         return total_loc_loss
 
     def confidence_loss(self, y_true, y_pred):
+        y_true, y_pred = self._reshape(y_true, y_pred)
         positives = K.cast(K.equal(y_true[:, :, 0], 1), K.dtype(y_true))
         # ignore = K.cast(K.equal(y_true[:, :, 0], -1), K.dtype(y_true))
         negatives = K.cast(K.equal(y_true[:, :, 0], 0), K.dtype(y_true))
@@ -68,6 +78,7 @@ class YoloV3Loss:
         return total_conf_loss
 
     def classification_loss(self, y_true, y_pred):
+        y_true, y_pred = self._reshape(y_true, y_pred)
         positives = K.cast(K.equal(y_true[:, :, 0], 1), K.dtype(y_true))
         negatives = K.cast(K.equal(y_true[:, :, 0], 0), K.dtype(y_true))
 

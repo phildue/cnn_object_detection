@@ -46,7 +46,7 @@ for i in range(len(imgs_raw)):
     imgs.append(img)
     labels.append(label)
 
-y = encoder.encode_label_batch(labels)
+y_batch = encoder.encode_label_batch(labels)
 
 loss = YoloV3Loss(n_classes)
 import keras.backend as K
@@ -70,24 +70,32 @@ with graph.as_default():
     session = tf.Session()
     with session.as_default():
         for i in range(batch_size - 1):
-            y_0 = y[i:i + 1].copy()
-            y_1 = y[i + 1:i + 2].copy()
-            y_1 = y_0.copy()
-            y_1[:, :, 0:1] = logit(y_1[:, :, 0:1])
-            y_1[:, :, 1:n_classes + 1] = np.clip(y_1[:, :, 1:n_classes + 1], K.epsilon(), 1 - K.epsilon())
-            y_1[:, :, 1:n_classes + 1] = np.log(y_1[:, :, 1:n_classes + 1])
 
-            y_1[:, :, n_classes + 1: n_classes + 1 + 2] = logit(y_1[:, :, n_classes + 1: n_classes + 1 + 2])
-            y_1[:, :, n_classes + 1 + 2: n_classes + 1 + 4] = log(y_1[:, :, n_classes + 1 + 2: n_classes + 1 + 4])
+            class_loss = 0
+            loc_loss = 0
+            conf_loss = 0
 
-            y_0_t = K.constant(y_0, shape=y_0.shape)
-            y_1_t = K.constant(y_1, shape=y_1.shape)
+            y_enc = []
+            for idx_out in range(3):
+                y_0 = y_batch[idx_out][i:i + 1].copy()
+                y_1 = y_batch[idx_out][i + 1:i + 2].copy()
+                y_1 = y_0.copy()
+                y_1[:, :, :, :, 0:1] = logit(y_1[:, :, :, :, 0:1])
+                y_1[:, :, :, :, 1:n_classes + 1] = np.clip(y_1[:, :, :, :, 1:n_classes + 1], K.epsilon(), 1 - K.epsilon())
+                y_1[:, :, :, :, 1:n_classes + 1] = np.log(y_1[:, :, :, :, 1:n_classes + 1])
 
-            class_loss = loss.classification_loss(y_0_t, y_1_t).eval()
-            loc_loss = loss.localization_loss(y_0_t, y_1_t).eval()
-            conf_loss = loss.confidence_loss(y_0_t, y_1_t).eval()
+                y_1[:, :, :, :, n_classes + 1: n_classes + 1 + 2] = logit(y_1[:, :, :, :, n_classes + 1: n_classes + 1 + 2])
+                y_1[:, :, :, :, n_classes + 1 + 2: n_classes + 1 + 4] = log(
+                    y_1[:, :, :, :, n_classes + 1 + 2: n_classes + 1 + 4])
+                y_enc.append(y_1)
+                y_0_t = K.constant(y_0, shape=y_0.shape)
+                y_1_t = K.constant(y_1, shape=y_1.shape)
+
+                class_loss += loss.classification_loss(y_0_t, y_1_t).eval()
+                loc_loss += loss.localization_loss(y_0_t, y_1_t).eval()
+                conf_loss += loss.confidence_loss(y_0_t, y_1_t).eval()
 
             print('Class Loss: {} - Loc Loss: {} - Conf Loss: {}'.format(class_loss, loc_loss, conf_loss))
-            l = decoder.decode_netout_batch(y_1)[0]
+            l = decoder.decode_netout_batch(y_enc)[0]
             l.objects = [o for o in l.objects if o.confidence > 0.01]
             show(imgs[i], labels=l)

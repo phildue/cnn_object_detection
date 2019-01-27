@@ -38,8 +38,10 @@ loader = iter(generator.generate_valid(batch_size=10, n=20))
 imgs, labels = next(loader)
 
 y = encoder.encode_label_batch(labels)
-labels_decoded = decoder.decode_netout_batch(y)
 
-for i, l in enumerate(labels_decoded):
-    l.objects = [o for o in l.objects if o.confidence > 0.0]
-    show(imgs[i], labels=l)
+print(y)
+# labels_decoded = decoder.decode_netout_batch(y)
+#
+# for i, l in enumerate(labels_decoded):
+#     l.objects = [o for o in l.objects if o.confidence > 0.0]
+#     show(imgs[i], labels=l)
